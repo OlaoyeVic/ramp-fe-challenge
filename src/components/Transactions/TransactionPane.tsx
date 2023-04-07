@@ -1,6 +1,11 @@
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import { InputCheckbox } from "../InputCheckbox"
 import { TransactionPaneComponent } from "./types"
+
+const moneyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+})
 
 export const TransactionPane: TransactionPaneComponent = ({
   transaction,
@@ -8,6 +13,17 @@ export const TransactionPane: TransactionPaneComponent = ({
   setTransactionApproval: consumerSetTransactionApproval,
 }) => {
   const [approved, setApproved] = useState(transaction.approved)
+
+  const updateTransactionApproval = useCallback(
+    async (newValue: boolean) => {
+      await consumerSetTransactionApproval({
+        transactionId: transaction.id,
+        newValue,
+      })
+      setApproved(newValue)
+    },
+    [consumerSetTransactionApproval, transaction.id]
+  )
 
   return (
     <div className="RampPane">
@@ -22,20 +38,8 @@ export const TransactionPane: TransactionPaneComponent = ({
         id={transaction.id}
         checked={approved}
         disabled={loading}
-        onChange={async (newValue) => {
-          await consumerSetTransactionApproval({
-            transactionId: transaction.id,
-            newValue,
-          })
-
-          setApproved(newValue)
-        }}
+        onChange={updateTransactionApproval}
       />
     </div>
   )
 }
-
-const moneyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-})
